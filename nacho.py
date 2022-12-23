@@ -1,16 +1,24 @@
+from distutils.dir_util import copy_tree
 import platform
 import shutil
 import sys
 import os
 
+# User Updatable Variable
+debug = False
+
 connectedDrives = []
 sourceDrive = ''
 destinationDrive = ''
+copiedDireCount = 0
+copiedFileCount = 0
+missedDireCount = 0
+missedFileCount = 0
 
 
 def clean_exit(message):
     print('\n' + message)
-    input('\nPress any key to continue...')
+    input('\nPress "Enter" to continue...')
     print('\nExiting...\n')
     sys.exit()
 
@@ -22,7 +30,6 @@ def welcome_message():
 def check_drives():
     global connectedDrives
     drives = [chr(x) + ':' for x in range(65, 91) if os.path.exists(chr(x) + ':')]
-    print(drives)
     drive_num = 0
     for drive in drives:
         print(str(drive_num) + ' -> ' + drive)
@@ -39,7 +46,7 @@ def pre_screen_drive():
     print('\n\nChecking Source Drive For Valid Files...')
     check_user_dir = os.path.isdir(connectedDrives[sourceDrive] + '\\Users')
     if not check_user_dir:
-        clean_exit('\nError: The source drive did not contain the expected user files. Please try again! Exiting...')
+        clean_exit('Error: The source drive did not contain the expected user files. Please try again! Exiting...')
 
 
 def prep_destination_drive():
@@ -47,7 +54,7 @@ def prep_destination_drive():
     global destinationDrive
     check_destination_dir = os.path.isdir(connectedDrives[destinationDrive] + '\\NachoPyDrop')
     if not check_destination_dir:
-        print('\n\nCreating New Directory For Destination Drive...')
+        print('\nCreating New Directory For Destination Drive...')
         path = os.path.join(connectedDrives[destinationDrive], '\\NachoPyDrop')
         os.mkdir(path)
 
@@ -56,7 +63,7 @@ def select_drive(drive_string):
     global connectedDrives
     global destinationDrive
     global sourceDrive
-    print('\n\nPlease select a ' + drive_string + ' drive from 0 to ' + str(len(connectedDrives)))
+    print('\n\nPlease select a ' + drive_string + ' drive from 0 to ' + str(len(connectedDrives) - 1))
     if drive_string == "destination":
         destinationDrive = _input('', int)
         prep_destination_drive()
@@ -74,58 +81,93 @@ def _input(message, input_type=str):
             pass
 
 
-def collect_files():
+def collect_parent_dirs():
     global connectedDrives
     global destinationDrive
     global sourceDrive
     source_dir = os.path.join(connectedDrives[sourceDrive], '\\Users')
     dest_dir = os.path.join(connectedDrives[destinationDrive], '\\NachoPyDrop')
     for file in os.listdir(source_dir):
-        copy(file, dest_dir)
+        child_item = os.path.join(source_dir, file)
+        copy_files(child_item, dest_dir)
 
 
-def copy(src, dst):
-    print('\nCopying ' + src + '...')
+def copy_files(src, dst):
+    global copiedDireCount
+    global copiedFileCount
+    global missedDireCount
+    global missedFileCount
+    global debug
+    if not debug:
+        print('Copying ' + src + '...', end="", flush=True)
+    else:
+        print('Copying ' + src + '...')
+    dst = os.path.join(dst, os.path.basename(src))
     try:
-        shutil.copy(src, dst)
-    except shutil.SameFileError:
-        print('\nError: The source and destination are the same!')
-    except PermissionError:
-        print('\nError: Permission denied! Try running this script as administrator!')
+        for item in os.listdir(src):
+            s = os.path.join(src, item)
+            d = os.path.join(dst, item)
+            if debug:
+                print('Copying ' + s + ' to ' + d)
+            if os.path.isdir(s):
+                try:
+                    copy_tree(s, d)
+                    copiedDireCount += 1
+                    if not debug:
+                        print('.', end="", flush=True)
+                except:
+                    if debug:
+                        print('Error: Could not copy directory ' + item + '!')
+                    missedDireCount += 1
+            else:
+                try:
+                    shutil.copy2(s, d)
+                    copiedFileCount += 1
+                    if not debug:
+                        print('.', end="", flush=True)
+                except:
+                    if debug:
+                        print('Error: Could not copy file ' + item + '!')
+                    missedFileCount += 1
     except:
-        print('\nError: Could not copy this file!')
+        pass
+    print('\n')
 
 
 def main():
     global connectedDrives
     global destinationDrive
     global sourceDrive
+    global copiedFileCount
+    global missedFileCount
     if platform.system() != 'Windows':
         clean_exit('Please only use this script in Windows!')
     print('Checking Connected Drives...')
     check_drives()
     select_drive('source')
+    print('Source drive check complete!')
     if len(connectedDrives) == 2:
         destinationDrive = 1 - sourceDrive
+        print('\n\nDrive ' + connectedDrives[destinationDrive] + ' automatically selected!')
         prep_destination_drive()
     else:
         select_drive('destination')
-    print('\n\nCollecting Files... Please Wait...')
-    collect_files()
+    print('Destination drive ready!')
+    print('\n\n\nSelected Settings:\nSource Location: ' + connectedDrives[sourceDrive] +
+          '\\Users\\*\nDestination Location: ' + connectedDrives[destinationDrive] + '\\NachoPyDrop')
+    input('\nReady for transfer! Press "Enter" to continue or press "Ctrl + C" to cancel...')
+    print('\n\nCollecting Files... Please Wait...\n\n')
+    collect_parent_dirs()
+    print('Successfully Copied ' + str(copiedFileCount) + ' File(s) and ' + str(copiedDireCount) + ' Directory(s).')
+    if missedDireCount > 0 or missedFileCount > 0:
+        print('Missed ' + str(missedFileCount) + ' File(s) and ' + str(missedDireCount) + ' Directory(s)...')
+        if debug:
+            print('See Above Log For What Files/Directories Were Missed.')
+        else:
+            print('Enable Debugging In The Script To See Which Files/Directories Were Missed.')
     clean_exit('\nScript complete!')
 
 
 welcome_message()
 main()
 
-
-'''
-Other stuff
-for file in os.listdir(rootdir):
-    d = os.path.join(rootdir, file)
-    if os.path.isdir(d):
-        print(d)
-my_list = ['blah', 'foo', 'bar']
-if item in my_list:
-    # whatever
-'''
