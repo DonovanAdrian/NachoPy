@@ -1,3 +1,11 @@
+'''
+ * This project was created by Donovan Adrian and any
+ * edits or changes must be confirmed as valid by Donovan
+ * with written consent under any circumstance.
+ *
+ * nacho.py Version 1.0
+'''
+
 from distutils.dir_util import copy_tree
 import platform
 import shutil
@@ -24,7 +32,11 @@ def clean_exit(message):
 
 
 def welcome_message():
-    print('\n\n******************************\nWelcome to the NachoPy Script!\n******************************\n')
+    print('\n\n'
+          '*****************************\n'
+          'Welcome to the NachoPy Script\n'
+          '         Version 1.0         \n'
+          '*****************************\n')
 
 
 def check_drives():
