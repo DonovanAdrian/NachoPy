@@ -9,6 +9,7 @@
 from distutils.dir_util import copy_tree
 import platform
 import shutil
+import time
 import sys
 import os
 
@@ -35,7 +36,7 @@ def welcome_message():
     print('\n\n'
           '*****************************\n'
           'Welcome to the NachoPy Script\n'
-          '         Version 1.0         \n'
+          '         Version 1.1a        \n'
           '*****************************\n')
 
 
@@ -168,15 +169,25 @@ def main():
     print('\n\n\nSelected Settings:\nSource Location: ' + connectedDrives[sourceDrive] +
           '\\Users\\*\nDestination Location: ' + connectedDrives[destinationDrive] + '\\NachoPyDrop')
     input('\nReady for transfer! Press "Enter" to continue or press "Ctrl + C" to cancel...')
+    start_time = time.time()
     print('\n\nCollecting Files... Please Wait...\n\n')
     collect_parent_dirs()
-    print('Successfully Copied ' + str(copiedFileCount) + ' File(s) and ' + str(copiedDireCount) + ' Directory(s).')
+    end_time = time.time()
+    completion_time = end_time - start_time
+    print('Nacho Run Summary:')
+    if completion_time > 60:
+        print(' Runtime (HH:MM:SS): ' + time.strftime('%H:%M:%S', time.gmtime(completion_time)))
+    else:
+        print(' Runtime (Seconds): ' + completion_time)
+    print(' Copied Files: ' + str(copiedFileCount))
+    print(' Copied Directories: ' + str(copiedDireCount))
     if missedDireCount > 0 or missedFileCount > 0:
-        print('Missed ' + str(missedFileCount) + ' File(s) and ' + str(missedDireCount) + ' Directory(s)...')
+        print(' Missed Files: ' + str(missedFileCount))
+        print(' Missed Directories: ' + str(missedDireCount))
         if debug:
-            print('See Above Log For What Files/Directories Were Missed.')
+            print('\nSee Above Log For What Files/Directories Were Missed.')
         else:
-            print('Enable Debugging In The Script To See Which Files/Directories Were Missed.')
+            print('\nEnable Debugging In The Script To See Which Files/Directories Were Missed.')
     clean_exit('\nScript complete!')
 
 
