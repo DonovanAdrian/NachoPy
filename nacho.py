@@ -15,6 +15,8 @@ import os
 
 # User Updatable Variable
 debug = False
+ignoredFileTypes = ['']
+ignoredFiles = ['desktop.ini', 'ntuser.dat', 'ntuser.ini']
 
 connectedDrives = []
 sourceDrive = ''
@@ -98,11 +100,25 @@ def collect_parent_dirs():
     global connectedDrives
     global destinationDrive
     global sourceDrive
+    global ignoredFiles
+    global ignoredFileTypes
+    ignore_file_bool = False
     source_dir = os.path.join(connectedDrives[sourceDrive], '\\Users')
     dest_dir = os.path.join(connectedDrives[destinationDrive], '\\NachoPyDrop')
     for file in os.listdir(source_dir):
-        child_item = os.path.join(source_dir, file)
-        copy_files(child_item, dest_dir)
+        for ignoredType in ignoredFileTypes:
+            if ignoredType in file:
+                ignore_file_bool = True
+                break
+        if file not in ignoredFiles and not ignore_file_bool:
+            child_item = os.path.join(source_dir, file)
+            copy_files(child_item, dest_dir)
+        elif debug:
+            print(file + ' ignored...')
+            break
+        else:
+            break
+        ignore_file_bool = False
 
 
 def copy_files(src, dst):
