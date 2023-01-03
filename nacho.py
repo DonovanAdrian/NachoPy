@@ -218,7 +218,8 @@ def main():
     if completion_time > 60:
         print(' Runtime (HH:MM:SS): ' + time.strftime('%H:%M:%S', time.gmtime(completion_time)))
     else:
-        print(' Runtime (Seconds): ' + completion_time)
+        completion_time = round(completion_time, 2)
+        print(' Runtime (Seconds): ' + str(completion_time))
     print(' Copied Files: ' + str(copiedFileCount))
     if missedFileCount > 0:
         print(' Missed Files: ' + str(missedFileCount))
