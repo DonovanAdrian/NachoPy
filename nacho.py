@@ -112,7 +112,7 @@ def collect_parent_dirs():
     global sourceDrive
     source_dir = os.path.join(connectedDrives[sourceDrive], '\\Users')
     dest_dir = os.path.join(connectedDrives[destinationDrive], '\\NachoPyDrop')
-    copy_files(source_dir, dest_dir, True)
+    copy_files(source_dir, dest_dir, 3)
 
 
 def copy_files(src, dst, initial_output):
@@ -121,8 +121,9 @@ def copy_files(src, dst, initial_output):
     global missedFileCount
     global debug
 
+    initial_output -= 1
     try:
-        if initial_output:
+        if 0 < initial_output < 2:
             if not debug:
                 print('\nCopying ' + src + '...', end="", flush=True)
             else:
@@ -144,9 +145,10 @@ def copy_files(src, dst, initial_output):
             dstname = os.path.join(dst, name)
             try:
                 if os.path.isdir(srcname):
-                    copy_files(srcname, dstname, False)
+                    copy_files(srcname, dstname, initial_output)
                     if not debug:
-                        print('.', end="", flush=True)
+                        if 0 < initial_output < 2:
+                            print('.', end="", flush=True)
                 else:
                     if debug:
                         print('Copying ' + srcname + ' to ' + dstname)
