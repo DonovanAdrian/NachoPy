@@ -16,6 +16,7 @@ import os
 debug = False
 ignoredFileTypes = []
 ignoredFiles = ['desktop.ini', 'ntuser.dat', 'ntuser.ini', 'ntuser.pol']
+ignoredUsers = ['All Users', 'Default', 'Public']
 
 connectedDrives = []
 sourceDrive = ''
@@ -23,6 +24,7 @@ destinationDrive = ''
 copiedFileCount = 0
 missedFileCount = 0
 ignoredFileCount = 0
+ignoredUserCount = 0
 
 
 def clean_exit(message):
@@ -106,92 +108,109 @@ def check_ignored_files(file):
     return False
 
 
+def check_ignored_users(user_path):
+    global ignoredUsers
+    for ignoredUser in ignoredUsers:
+        if ignoredUser in user_path:
+            return True
+    return False
+
+
 def collect_parent_dirs():
     global connectedDrives
     global destinationDrive
     global sourceDrive
     source_dir = os.path.join(connectedDrives[sourceDrive], '\\Users')
     dest_dir = os.path.join(connectedDrives[destinationDrive], '\\NachoPyDrop')
-    copy_files(source_dir, dest_dir, 3)
+    copy_files(source_dir, dest_dir, 3, False)
 
 
-def copy_files(src, dst, initial_output):
+def copy_files(src, dst, initial_output, ignore_user_check):
+    global ignoredUserCount
     global ignoredFileCount
     global copiedFileCount
     global missedFileCount
     global debug
 
     initial_output -= 1
-    try:
-        if 0 < initial_output < 2:
-            if not debug:
-                print('\nCopying ' + src + '...', end="", flush=True)
-            else:
-                print('\nCopying ' + src + '...')
-        names = os.listdir(src)
-
-        if not os.path.isdir(dst):
-            os.makedirs(dst)
-
-        for name in names:
-            if check_ignored_files(name.lower()):
-                if debug:
-                    print('Ignoring ' + name + '...')
-                    ignoredFileCount += 1
+    if not check_ignored_users(src) or ignore_user_check:
+        try:
+            if initial_output == 1:
+                if not debug:
+                    print('\nCopying ' + src + '...', end="", flush=True)
                 else:
-                    ignoredFileCount += 1
-                continue
-            srcname = os.path.join(src, name)
-            dstname = os.path.join(dst, name)
+                    print('\nCopying ' + src + '...')
+            if not os.path.isdir(dst):
+                os.makedirs(dst)
+
+            names = os.listdir(src)
+            for name in names:
+                if check_ignored_files(name.lower()):
+                    if debug:
+                        print('Ignoring ' + name + '...')
+                        ignoredFileCount += 1
+                    else:
+                        ignoredFileCount += 1
+                    continue
+                srcname = os.path.join(src, name)
+                dstname = os.path.join(dst, name)
+                try:
+                    if os.path.isdir(srcname):
+                        if initial_output == 1:
+                            ignore_user_check = True
+                            if not debug:
+                                print('.', end="", flush=True)
+                        copy_files(srcname, dstname, initial_output, ignore_user_check)
+                    else:
+                        if debug:
+                            print('Copying ' + srcname + ' to ' + dstname)
+                        copy2(srcname, dstname)
+                        copiedFileCount += 1
+                except (IOError, os.error):
+                    if debug:
+                        print('Error: Could not copy file ' + name + '!')
+                    missedFileCount += 1
+                except Error:
+                    if debug:
+                        print('Error: Could not copy file ' + name + '!')
+                    missedFileCount += 1
             try:
-                if os.path.isdir(srcname):
-                    copy_files(srcname, dstname, initial_output)
-                    if not debug:
-                        if 0 < initial_output < 2:
-                            print('.', end="", flush=True)
+                if check_ignored_files(src.lower()):
+                    if debug:
+                        print('Ignoring ' + src + '...')
+                        ignoredFileCount += 1
+                    else:
+                        ignoredFileCount += 1
                 else:
                     if debug:
                         print('Copying ' + srcname + ' to ' + dstname)
-                    copy2(srcname, dstname)
+                    copystat(src, dst)
                     copiedFileCount += 1
-            except (IOError, os.error):
+            except WindowsError:
                 if debug:
-                    print('Error: Could not copy file ' + name + '!')
+                    print('Error: Could not copy file ' + src + '!')
                 missedFileCount += 1
-            except Error:
+                pass
+            except OSError:
                 if debug:
-                    print('Error: Could not copy file ' + name + '!')
+                    print('Error: Could not copy file ' + src + '!')
                 missedFileCount += 1
-        try:
-            if check_ignored_files(src.lower()):
-                if debug:
-                    print('Ignoring ' + src + '...')
-                    ignoredFileCount += 1
-                else:
-                    ignoredFileCount += 1
-            else:
-                if debug:
-                    print('Copying ' + srcname + ' to ' + dstname)
-                copystat(src, dst)
-                copiedFileCount += 1
-        except WindowsError:
-            if debug:
-                print('Error: Could not copy file ' + src + '!')
-            missedFileCount += 1
+                pass
+        except:
             pass
-        except OSError:
-            if debug:
-                print('Error: Could not copy file ' + src + '!')
-            missedFileCount += 1
-            pass
-    except:
-        pass
+    elif initial_output == 1:
+        if debug:
+            print('Ignoring User ' + src + '...')
+        else:
+            print('\nIgnoring User ' + src + '...', end="", flush=True)
+        ignoredUserCount += 1
 
 
 def main():
     global connectedDrives
     global destinationDrive
     global sourceDrive
+    global ignoredUserCount
     global ignoredFileCount
     global copiedFileCount
     global missedFileCount
@@ -227,16 +246,21 @@ def main():
         print(' Missed Files: ' + str(missedFileCount))
     if ignoredFileCount > 0:
         print(' Ignored Files: ' + str(ignoredFileCount))
+    if ignoredUserCount > 0:
+        print(' Ignored Users: ' + str(ignoredUserCount))
+    print('\n')
     if missedFileCount > 0:
         if debug:
-            print('\nSee Above Log For What Files/Directories Were Missed.')
+            print('See Above Log For What Files/Directories Were Missed.')
         else:
-            print('\nEnable Debugging In The Script To See Which Files/Directories Were Missed.')
+            print('Enable Debugging In The Script To See Which Files/Directories Were Missed.')
     if ignoredFileCount > 0:
         if debug:
-            print('\nSee Above Log For What Files/Directories Were Ignored.')
+            print('See Above Log For What Files/Directories Were Ignored.')
         else:
-            print('\nEnable Debugging In The Script To See Which Files/Directories Were Ignored.')
+            print('Enable Debugging In The Script To See Which Files/Directories Were Ignored.')
+    if ignoredUserCount > 0:
+        print('See Above Log For What Users Were Ignored.')
     clean_exit('\nScript complete!')
 
 
