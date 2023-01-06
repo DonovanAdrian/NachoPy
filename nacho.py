@@ -12,11 +12,48 @@ import time
 import sys
 import os
 
-# User Updatable Variable
+'''
+************************************************
+*********** User Updatable Variables ***********
+************************************************
+'''
+
 debug = False
 ignoredFileTypes = []
 ignoredFiles = ['desktop.ini', 'ntuser.dat', 'ntuser.ini', 'ntuser.pol']
 ignoredUsers = ['All Users', 'Default', 'Public']
+
+'''
+************************************************
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+*********** User Updatable Variables ***********
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+************************************************
+Variable Key:
+    debug - 
+        Options: True or False
+        Info: Enabling debug will show more 
+         verbose details. Every single copied,
+         missed, skipped, or ignored file will
+         be output into the console.
+    ignoredFileTypes - 
+        Options: [] or ['.x'] or ['.x', '.y'] etc
+        Info: Specific file types that need
+         to be ignored can be entered within
+         the brackets with ' ' quotations.
+         NOTE: Please use the format '.xyz'
+    ignoredFiles - 
+        Options: [] or ['x.x'] or ['x.x', 'y.y'] etc
+        Info: Specific files that need to be
+         ignored can be entered within the
+         brackets with ' ' quotations.
+    ignoredUsers - 
+        Options: [] or ['x'] or ['x', 'y'] etc
+        Info: Specific user directories that
+         need to be ignored can be entered 
+         within the brackets with ' ' quotations.
+************************************************
+'''
 
 connectedDrives = []
 sourceDrive = ''
