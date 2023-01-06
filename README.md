@@ -13,10 +13,11 @@
  practice with Python, of course.
 
 ## How Well Does This Work?
- Well, it doesn't work quite yet! So far it's just a concept, but I hope
- to finish basic functionality swiftly. I also figured it may be 
- interesting to provide my thought process from beginning to end, just 
- as I have mostly done with some of my other repositories.
+ So far it works well! The first iteration, Version 1.0, achieves the 
+ core goal; basic file copy of all of the files within the defined 
+ source drive. Nothing fancy just yet there. However, Version 1.1 is 
+ in the works which will add user customizable variables and better 
+ output.
 
 ## What Are Some Possible Use Cases For This Script?
  At this time I am only supporting Windows recovery assistance, grabbing
@@ -29,6 +30,27 @@
  At this time, I want to complete basic functionality. However, I would
  like to include Unix support at some point in order to broaden the use
  cases as well as this script's potential.
+
+## (Version 1.1) What Are Some Ways I Can Fine-Tune My Copy?
+ First, open nacho.py in a text editor. The following variables are
+ available and are intended to be updated by the user.
+- debug 
+  - Options: True or False
+  - Info: Enabling debug will show more verbose details. Every single 
+ copied, missed, skipped, or ignored file will be output into the console.
+- ignoredFileTypes
+  - Options: [] or ['.x'] or ['.x', '.y'] etc
+  - Info: Specific file types that need to be ignored can be entered 
+ within the brackets with ' ' quotations.
+  - NOTE: Please use the format '.xyz'
+- ignoredFiles
+  - Options: [] or ['x.x'] or ['x.x', 'y.y'] etc
+  - Info: Specific files that need to be ignored can be entered within
+ the brackets with ' ' quotations.
+- ignoredUsers
+  - Options: [] or ['x'] or ['x', 'y'] etc
+  - Info: Specific user directories that need to be ignored can be 
+ entered within the brackets with ' ' quotations.
 
 ---------------------------------------------------
 
