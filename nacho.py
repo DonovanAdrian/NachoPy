@@ -295,21 +295,21 @@ def main():
     collect_parent_dirs()
     end_time = time.time()
     completion_time = end_time - start_time
-    print('\n\nNacho Run Summary:')
+    print('\n\n\n\nNacho Run Summary:')
     if completion_time > 60:
-        print(' Runtime (HH:MM:SS): ' + time.strftime('%H:%M:%S', time.gmtime(completion_time)))
+        print(' Runtime (HH:MM:SS) -> ' + time.strftime('%H:%M:%S', time.gmtime(completion_time)))
     else:
         completion_time = round(completion_time, 2)
-        print(' Runtime (Seconds): ' + str(completion_time))
-    print(' Copied Files: ' + str(copiedFileCount))
+        print(' Runtime (Seconds) --> ' + str(completion_time))
+    print(' Copied Files -------> ' + str(copiedFileCount))
     if missedFileCount > 0:
-        print(' Missed Files: ' + str(missedFileCount))
+        print(' Missed Files -------> ' + str(missedFileCount))
     if skippedFileCount > 0:
-        print(' Skipped Files: ' + str(skippedFileCount))
+        print(' Skipped Files ------> ' + str(skippedFileCount))
     if ignoredFileCount > 0:
-        print(' Ignored Files: ' + str(ignoredFileCount))
+        print(' Ignored Files ------> ' + str(ignoredFileCount))
     if ignoredUserCount > 0:
-        print(' Ignored Users: ' + str(ignoredUserCount))
+        print(' Ignored Users ------> ' + str(ignoredUserCount))
     print('\n')
     if missedFileCount > 0:
         if debug:
