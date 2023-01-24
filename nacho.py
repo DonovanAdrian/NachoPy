@@ -7,7 +7,10 @@
 '''
 
 from shutil import copy2, copystat, Error
+from datetime import datetime
 import platform
+import random
+import string
 import time
 import sys
 import os
@@ -19,6 +22,7 @@ import os
 '''
 
 debug = False
+debugLogOutput = True
 ignoredFileTypes = []
 ignoredFiles = ['desktop.ini', 'ntuser.dat', 'ntuser.ini', 'ntuser.pol']
 ignoredUsers = ['All Users', 'Default', 'Public']
@@ -56,6 +60,7 @@ Variable Key:
 '''
 
 connectedDrives = []
+debugLogCollection = []
 sourceDrive = ''
 destinationDrive = ''
 copiedFileCount = 0
@@ -64,6 +69,7 @@ skippedDirCount = 0
 skippedFileCount = 0
 ignoredFileCount = 0
 ignoredUserCount = 0
+dtStringInitiated = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
 
 
 def clean_exit(message):
@@ -129,7 +135,7 @@ def select_drive(drive_string):
 def _input(message, input_type=str):
     while True:
         try:
-            return input_type (input(message))
+            return input_type(input(message))
         except:
             print('Please only enter a ' + str(input_type) + '! Try again...\n')
             pass
@@ -190,6 +196,7 @@ def collect_parent_dirs():
 
 
 def copy_files(src, dst, initial_output, ignore_user_check):
+    global debugLogCollection
     global ignoredUserCount
     global ignoredFileCount
     global skippedFileCount
@@ -202,6 +209,8 @@ def copy_files(src, dst, initial_output, ignore_user_check):
     if not check_ignored_users(src) or ignore_user_check:
         try:
             if initial_output == 1:
+                if debugLogOutput:
+                    debugLogCollection.append('\nCopying ' + src + '...')
                 if not debug:
                     print('\nCopying ' + src + '...', end="", flush=True)
                 else:
@@ -213,6 +222,8 @@ def copy_files(src, dst, initial_output, ignore_user_check):
             dst_names = os.listdir(dst)
             for name in names:
                 if check_ignored_files(name.lower()):
+                    if debugLogOutput:
+                        debugLogCollection.append('Ignoring ' + name + '...')
                     if debug:
                         print('Ignoring ' + name + '...')
                     ignoredFileCount += 1
@@ -229,51 +240,73 @@ def copy_files(src, dst, initial_output, ignore_user_check):
                                         print('.', end="", flush=True)
                                 copy_files(srcname, dstname, initial_output, ignore_user_check)
                             else:
+                                if debugLogOutput:
+                                    debugLogCollection.append('Skipping ' + name + ' due to emptiness or due to all '
+                                                                                   'the contained files being ignored.')
                                 if debug:
                                     print('Skipping ' + name + ' due to emptiness or due to all the contained files '
                                                                'being ignored.')
                                 skippedDirCount += 1
                             continue
                         else:
+                            if debugLogOutput:
+                                debugLogCollection.append('Copying ' + srcname + ' to ' + dstname)
                             if debug:
                                 print('Copying ' + srcname + ' to ' + dstname)
                             copy2(srcname, dstname)
                             copiedFileCount += 1
                     except (IOError, os.error):
+                        if debugLogOutput:
+                            debugLogCollection.append('Error: Could not copy file ' + name + '!')
                         if debug:
                             print('Error: Could not copy file ' + name + '!')
                         missedFileCount += 1
                     except Error:
+                        if debugLogOutput:
+                            debugLogCollection.append('Error: Could not copy file ' + name + '!')
                         if debug:
                             print('Error: Could not copy file ' + name + '!')
                         missedFileCount += 1
                 else:
+                    if debugLogOutput:
+                        debugLogCollection.append('Skipping ' + name + ' since it already exists in the destination...')
                     if debug:
                         print('Skipping ' + name + ' since it already exists in the destination...')
                     skippedFileCount += 1
             try:
                 if check_ignored_files(src.lower()):
+                    if debugLogOutput:
+                        debugLogCollection.append('Ignoring ' + src + '...')
                     if debug:
                         print('Ignoring ' + src + '...')
                     ignoredFileCount += 1
                 else:
                     dst_files = os.listdir(dst)
                     if not check_destination_files(src, dst_files) and not os.path.isdir(src):
+                        if debugLogOutput:
+                            debugLogCollection.append('Copying ' + src + ' to ' + dst)
                         if debug:
                             print('Copying ' + src + ' to ' + dst)
                         copystat(src, dst)
                         copiedFileCount += 1
                     elif not os.path.isdir(src):
+                        if debugLogOutput:
+                            debugLogCollection.append('Skipping ' + src + ' since it already exists in the destination '
+                                                                          'and is not a directory...')
                         if debug:
                             print('Skipping ' + src + ' since it already exists in the destination and is not a '
                                                       'directory...')
                         skippedFileCount += 1
             except WindowsError:
+                if debugLogOutput:
+                    debugLogCollection.append('Error: Could not copy file ' + src + '!')
                 if debug:
                     print('Error: Could not copy file ' + src + '!')
                 missedFileCount += 1
                 pass
             except OSError:
+                if debugLogOutput:
+                    debugLogCollection.append('Error: Could not copy file ' + src + '!')
                 if debug:
                     print('Error: Could not copy file ' + src + '!')
                 missedFileCount += 1
@@ -281,11 +314,88 @@ def copy_files(src, dst, initial_output, ignore_user_check):
         except:
             pass
     elif initial_output == 1:
+        if debugLogOutput:
+            debugLogCollection.append('Ignoring User ' + src + '...')
         if debug:
             print('Ignoring User ' + src + '...')
         else:
             print('\nIgnoring User ' + src + '...', end="", flush=True)
         ignoredUserCount += 1
+
+
+def generate_random_string(letter_count, num_count):
+    letters = ''.join(random.choice(string.ascii_letters) for i in range(letter_count))
+    numbers = ''.join(random.choice(string.digits) for i in range(num_count))
+    alphanumeric = list(letters + numbers)
+    random.shuffle(alphanumeric)
+    return ''.join(alphanumeric)
+
+
+def generate_debug_log(completion_time):
+    global debugLogCollection
+    global dtStringInitiated
+    global connectedDrives
+    global destinationDrive
+    global sourceDrive
+    global ignoredUserCount
+    global ignoredFileCount
+    global skippedFileCount
+    global skippedDirCount
+    global copiedFileCount
+    global missedFileCount
+    if len(debugLogCollection) > 0:
+        filename_retry = 0
+        nacho_file_name = ''
+        dest_dir = os.path.join(connectedDrives[destinationDrive], '\\NachoPyDrop')
+        dst_names = os.listdir(dest_dir)
+        max_random_gen = 10
+        random_letter_count = random.randrange(3, 7)
+        while filename_retry < 10:
+            nacho_file_name = 'NachoDebugLog_' + generate_random_string(random_letter_count, max_random_gen -
+                                                                        random_letter_count) + '.txt'
+            if nacho_file_name not in dst_names:
+                break
+            filename_retry += 1
+        if filename_retry < 10:
+            now = datetime.now()
+            dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
+            nacho_file_path = os.path.join(dest_dir, nacho_file_name)
+            try:
+                nacho_debug_file = open(nacho_file_path, 'w')
+                nacho_debug_file.write('Nacho Run Initiated On: ' + dtStringInitiated)
+                nacho_debug_file.write('\nNacho Run Completed On: ' + dt_string)
+                nacho_debug_file.write('\n\nSelected Settings:\nSource Location: ' + connectedDrives[sourceDrive] +
+                                       '\\Users\\*\nDestination Location: ' + connectedDrives[destinationDrive] +
+                                       '\\NachoPyDrop')
+                nacho_debug_file.write('\n\n\n*******Debug Data*******')
+                for debugLine in debugLogCollection:
+                    nacho_debug_file.write('\n' + debugLine)
+                nacho_debug_file.write('\n\n\n\nNacho Run Summary:')
+                if completion_time > 60:
+                    nacho_debug_file.write('\n Runtime (HH:MM:SS) -> ' + time.strftime('%H:%M:%S',
+                                                                                     time.gmtime(completion_time)))
+                else:
+                    completion_time = round(completion_time, 2)
+                    nacho_debug_file.write('\n Runtime (Seconds) --> ' + str(completion_time))
+                nacho_debug_file.write('\n Copied Files -------> ' + str(copiedFileCount))
+                if missedFileCount > 0:
+                    nacho_debug_file.write('\n Missed Files -------> ' + str(missedFileCount))
+                if skippedDirCount > 0:
+                    nacho_debug_file.write('\n Skipped Dirs -------> ' + str(skippedDirCount))
+                if skippedFileCount > 0:
+                    nacho_debug_file.write('\n Skipped Files ------> ' + str(skippedFileCount))
+                if ignoredFileCount > 0:
+                    nacho_debug_file.write('\n Ignored Files ------> ' + str(ignoredFileCount))
+                if ignoredUserCount > 0:
+                    nacho_debug_file.write('\n Ignored Users ------> ' + str(ignoredUserCount))
+                nacho_debug_file.close()
+                print('Debug Log Finished Generating!\n\n')
+            except:
+                print('Debug Log Generation Error! A File Was Not Generated.\n\n')
+        else:
+            print('Debug Log Generation Failed! Are There Any Other Logs In The Destination?\n\n')
+    else:
+        print('No Debug Log Data Collected! A File Was Not Generated.\n\n')
 
 
 def main():
@@ -319,6 +429,9 @@ def main():
     collect_parent_dirs()
     end_time = time.time()
     completion_time = end_time - start_time
+    if debugLogOutput:
+        print('\n\nGenerating Debug Log...')
+        generate_debug_log(completion_time)
     print('\n\n\n\nNacho Run Summary:')
     if completion_time > 60:
         print(' Runtime (HH:MM:SS) -> ' + time.strftime('%H:%M:%S', time.gmtime(completion_time)))
@@ -337,31 +450,18 @@ def main():
     if ignoredUserCount > 0:
         print(' Ignored Users ------> ' + str(ignoredUserCount))
     print('\n')
-    if missedFileCount > 0:
-        if debug:
-            print('See Above Log For What Files/Directories Were Missed.')
+    if missedFileCount > 0 or skippedDirCount > 0 or skippedFileCount > 0 or ignoredFileCount > 0 or \
+            ignoredUserCount > 0:
+        if debugLogOutput and debug:
+            print('See Above Log Or Debug Log Output In Destination For More Details.')
+        elif debugLogOutput and not debug:
+            print('See Debug Log Output In Destination For More Details.')
+        elif not debugLogOutput and debug:
+            print('See Above Log For More Details.')
         else:
-            print('Enable Debugging In The Script To See Which Files/Directories Were Missed.')
-    if skippedDirCount > 0:
-        if debug:
-            print('See Above Log For What Directories Were Skipped.')
-        else:
-            print('Enable Debugging In The Script To See Which Directories Were Skipped.')
-    if skippedFileCount > 0:
-        if debug:
-            print('See Above Log For What Files Were Skipped.')
-        else:
-            print('Enable Debugging In The Script To See Which Files Were Skipped.')
-    if ignoredFileCount > 0:
-        if debug:
-            print('See Above Log For What Files Were Ignored.')
-        else:
-            print('Enable Debugging In The Script To See Which Files Were Ignored.')
-    if ignoredUserCount > 0:
-        print('See Above Log For What Users Were Ignored.')
+            print('Enable Debugging Or Debug Log Output In The Script For More Details.')
     clean_exit('\nScript complete!')
 
 
 welcome_message()
 main()
-
