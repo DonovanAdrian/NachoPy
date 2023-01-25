@@ -3,7 +3,7 @@
  * edits or changes must be confirmed as valid by Donovan
  * with written consent under any circumstance.
  *
- * nacho.py Version 1.0
+ * nacho.py Version 1.1
 '''
 
 from shutil import copy2, copystat, Error
@@ -83,7 +83,7 @@ def welcome_message():
     print('\n\n'
           '*****************************\n'
           'Welcome to the NachoPy Script\n'
-          '         Version 1.1a        \n'
+          '         Version 1.1         \n'
           '*****************************\n')
 
 
